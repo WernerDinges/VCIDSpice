@@ -5,7 +5,7 @@ use crate::simulation::role::{Role};
 ///
 /// # Parameters
 /// - `circuit`: The circuit description.
-/// - `t_vir`: A scaling factor (likely used to nondimensionalize currents/charges).
+/// - `t_vir`: A scaling factor.
 /// - `tolerance`: The convergence threshold (maximum allowed voltage change).
 /// - `initial_voltages`: Optional initial guess for node voltages (if `None`, start at zero).
 ///
