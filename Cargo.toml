@@ -1,0 +1,25 @@
+[package]
+name = "vcid_spice"
+version = "0.1.0"
+edition = "2021"
+authors = ["Daniel Dinges"]
+description = "A circuit simulation library"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/yourusername/vcid_spice"
+documentation = "https://docs.rs/vcid_spice"
+readme = "README.md"
+keywords = ["circuit", "simulation", "spice", "electronics"]
+categories = ["simulation", "science"]
+
+[lib]
+name = "vcid_spice"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+
+[dev-dependencies]
+criterion = "0.5"
+
+[[bench]]
+name = "op_bench"
+harness = false
