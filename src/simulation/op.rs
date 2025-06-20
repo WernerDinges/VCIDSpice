@@ -35,10 +35,13 @@ pub fn simulate_op(
     let mut consts = ConstantCharges { currents: vec![], target_nodes: vec![] };
     let mut linears = LinearContributions { conductances: vec![], neighbors: vec![], target_nodes: vec![] };
     let mut exps = ExponentialContributions { i_s: vec![], n: vec![], anodes: vec![], cathodes: vec![], flips: vec![], target_nodes: vec![], };
+    let mut voltage_sources: Vec<(usize /*an*/, usize /*ca*/, f64 /*Vdc*/)> = vec![];
 
     for component in &circuit.components { match component {
 
-        Component::VoltageDc { .. } => { /* TODO(IMPLEMENT) */ }
+        Component::VoltageDc { anode, cathode, v } => {
+            voltage_sources.push((*anode, *cathode, *v));
+        }
 
         Component::CurrentDc { anode, cathode, current } => {
             let scaled = current * t_vir;
@@ -88,22 +91,33 @@ pub fn simulate_op(
     loop {
         charges.fill(0.0);
 
-        // Compute charge contributions (q_vir)
+        // --- Compute charge contributions (q_vir) ---
+        // Current sources
         for i in 0..consts.currents.len() {
             charges[consts.target_nodes[i]] += consts.currents[i];
         }
+        // Simple resistors
         for i in 0..linears.conductances.len() {
             let t = linears.target_nodes[i];
             let n = linears.neighbors[i];
             charges[t] += linears.conductances[i] * (voltages[n] - voltages[t]);
         }
+        // Simple diodes
         for i in 0..exps.i_s.len() {
             let v_diff = (voltages[exps.anodes[i]] - voltages[exps.cathodes[i]]).clamp(-5.0, 5.0);
             let current = exps.flips[i] * exps.i_s[i] * (E.powf(v_diff / (exps.n[i] * 0.025852)) - 1.0);
             charges[exps.target_nodes[i]] += current;
         }
+        // Voltage sources
+        for &(an, ca, vdc) in &voltage_sources {
+            let v_diff = voltages[an] - voltages[ca];
+            let dv = v_diff - vdc;
+            let c_diff = 10.0; // Differential capacitance that injects charges
+            charges[an] -= c_diff * dv;
+            charges[ca] += c_diff * dv;
+        }
 
-        // Compute voltage updates
+        // --- Compute voltage updates ---
         let mut delta_vs = vec![0.0; circuit.nodes_count];
         for i in 0..linears.target_nodes.len() {
             let t = linears.target_nodes[i];
@@ -116,15 +130,15 @@ pub fn simulate_op(
             delta_vs[t] += damper * (charges[t] - charges[n]);
         }
 
-        // Update voltages
+        // --- Update voltages ---
         for i in 0..circuit.nodes_count {
             voltages[i] += delta_vs[i];
         }
 
-        // Error metric
+        // --- Error metric ---
         let max_delta_v = delta_vs.iter().map(|v| v.abs()).fold(0.0, f64::max);
 
-        // Adaptive damping
+        // --- Adaptive damping ---
         if max_delta_v > prev_error {
             voltages.clone_from(&prev_voltages);
             damper *= 0.5;

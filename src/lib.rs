@@ -3,8 +3,8 @@ pub mod simulation;
 
 #[cfg(test)]
 mod tests {
-    use crate::general::circuit::Circuit;
-    use crate::general::circuit::Component::{CurrentDc, Diode, Resistor};
+    use crate::general::circuit::{Circuit, Component};
+    use crate::general::circuit::Component::{VoltageDc, Diode, Resistor, CurrentDc};
     use crate::simulation::op::simulate_op;
 
     #[test]
@@ -18,11 +18,11 @@ mod tests {
         circuit.add_component(Resistor { pin1: 0, pin2: 2, r: 5. });
 
         use std::time::Instant;
-        let now = Instant::now();
+        let timer = Instant::now();
 
         let voltages = simulate_op(&circuit, 0.05, 1e-3, None);
 
-        let elapsed = now.elapsed();
+        let elapsed = timer.elapsed();
         println!("{:?}", voltages);
         print!("{:?}", elapsed);
     }
