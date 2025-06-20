@@ -77,3 +77,7 @@ the changes in potential are to the charge difference between the nodes
 (the virtual elastance is not related to the real capacitances in the circuit;
 it is only related to the virtual charges). The damping factor $\alpha^{(k)}$ is determined dynamically
 for all nodes to control the stiffness of the voltage updates at different stages of the simulation.
+
+## License
+
+Licensed under [MIT license](http://opensource.org/licenses/MIT)
